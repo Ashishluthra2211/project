@@ -32,10 +32,6 @@ use Imap;
 class PagesController extends AppController
 {
 	
-	
-	
-	
-	
     /**
      * Displays a view
      *
@@ -54,65 +50,60 @@ class PagesController extends AppController
 		
 		$email = new Imap();
 
-		$connect = $email->connect(
-			'{:993/imap/ssl}INBOX', //host
-			'', //email
-			'' //password
-		);
+		// $connect = $email->connect(
+			// '{imap.gmail.com:993/imap/ssl}INBOX', //host
+			// '', //username
+			// '' //password
+			// ,OP_READONLY
+		// );
+$hostname = "{imap.gmail.com:993/imap/ssl}INBOX";
+$username = '';
+$password = '';
+$inbox = imap_open($hostname,$username,$password);
 
-	if($connect){
-		$inbox = $email->getMessages('html', 'UNSEEN');
+
+$mails = imap_search($inbox, 'UNSEEN');
+
+
+
+
+
+
+
+	if($mails){
+		rsort($mails);
+		
+		
+		// $inbox = $email->getMessages('html', 'UNSEEN');
 		// $result = imap_search(, 'UNSEEN');
 		
-		foreach($inbox['data'] as $emaildata){
+		foreach($mails as $emaildata){
 			
-			
-			
+			$overview = imap_fetch_overview($inbox,$emaildata,0);
+			$message = imap_fetchbody($inbox,$emaildata, 1);
+			echo "<pre>";
+			print_r($overview);
 		$user_register = $userTableObject->newEntity();
 		$user_patched = $userTableObject->patchEntity($user_register,$post );			
-		$user_patched->subject = $emaildata['subject'];
-		$user_patched->add_date = $emaildata['date'];
-		$user_patched->message = $emaildata['message'];
-		if(!empty($emaildata['attachments'][0])){
-			$user_patched->attachment = $emaildata['attachments'][0];
+		$user_patched->subject = $overview[0]->subject;
+		$user_patched->add_date = $overview[0]->date;
+		$user_patched->message = $message;
+		if(!empty($overview[0]->attachments)){
+			$user_patched->attachment = $overview[0]->attachments;
 		}
 		$userTableObject->save($user_patched);
 		}
 		
+		print_r('Added List');  die;
 	
 }else{
-	echo json_encode(array("status" => "error", "message" => "Not connect1."), JSON_PRETTY_PRINT);
+	echo json_encode(array("status" => "error", "message" => "Not Data found."), JSON_PRETTY_PRINT);
 }
 		
 		
 		
 		
-		print_r('Added List');  die;
 		
-        // $count = count($path);
-        // if (!$count) {
-            // return $this->redirect('/');
-        // }
-        // if (in_array('..', $path, true) || in_array('.', $path, true)) {
-            // throw new ForbiddenException();
-        // }
-        // $page = $subpage = null;
-
-        // if (!empty($path[0])) {
-            // $page = $path[0];
-        // }
-        // if (!empty($path[1])) {
-            // $subpage = $path[1];
-        // }
-        // $this->set(compact('page', 'subpage'));
-
-        // try {
-            // $this->render(implode('/', $path));
-        // } catch (MissingTemplateException $exception) {
-            // if (Configure::read('debug')) {
-                // throw $exception;
-            // }
-            // throw new NotFoundException();
-        // }
+        
     }
 }
